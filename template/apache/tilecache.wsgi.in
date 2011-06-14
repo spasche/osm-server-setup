@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, "@@PROJECT_DIR@@/build/tilecache")
+
+import TileCache
+
+TC_CONFIG = "@@PROJECT_DIR@@/tilecache/tilecache.cfg"
+service = {}
+
+def application(environ, start_response): 
+    global service 
+ 
+    if not service: 
+        service = TileCache.Service.load(TC_CONFIG) 
+    return TileCache.wsgiHandler(environ, start_response, service) 

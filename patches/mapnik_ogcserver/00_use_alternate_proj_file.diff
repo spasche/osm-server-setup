@@ -1,0 +1,21 @@
+diff -dur OGCServer.orig//ogcserver/common.py OGCServer/ogcserver/common.py
+--- OGCServer.orig//ogcserver/common.py	2011-06-08 12:49:56.000000000 +0200
++++ OGCServer/ogcserver/common.py	2011-06-08 13:05:09.000000000 +0200
+@@ -367,6 +367,17 @@
+         #if params.has_key('styles') and len(params['styles']) != len(params['layers']):
+         #    raise OGCException('STYLES length does not match LAYERS length.')
+         m = Map(params['width'], params['height'], '+init=%s' % params['crs'])
++
++        # osm-server-config modification:
++        # Allow having projection settings in other files than "epsg".
++        # It allows us to use the standard proj package which has the
++        # spherical mercator (900913) project in esri.extra instead of epsg.
++        SRID_TO_FILE = {
++            900913: "esri.extra"
++        }
++        srid = int(m.srs.split(":")[-1])
++        proj_file = SRID_TO_FILE.get(srid, "epsg")
++        m.srs = m.srs.replace("epsg:", proj_file + ":")
+ 
+         if params.has_key('transparent') and params['transparent'] in ('FALSE','False','false'):
+             if params['bgcolor']:

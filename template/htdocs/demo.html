@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href='http://fonts.googleapis.com/css?family=Maven+Pro' rel='stylesheet' type='text/css'>
+    <title>OpenLayers Demo Page</title>
+    <style>
+      html {
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        font-family: 'Maven Pro', arial, serif;
+        font-size: small;
+      }
+      body {
+        margin: 10px;
+      }
+      h1 {
+        margin: 0;
+        padding: 6px;
+        border:0;
+        font-size: 20pt;
+      }
+      header {
+        display: block;
+        height: 43px;
+        padding: 0;
+        background-color: #eee;
+        border: 1px solid #888;
+      }
+      footer {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+      }
+      #map {
+        position: absolute;
+        top: 60px;
+        bottom: 80px;
+        left: 10px;
+        right: 10px;
+        border: 1px solid #888;
+      }
+      #buildInfo {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        font-size: x-small;
+        color: DarkSlateGrey;
+      }
+    </style>
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="config.js"></script>
+    <script src="OpenLayers-2.10/OpenLayers.js"></script>
+  </head>
+  <body>
+    <header><h1>OpenLayers Demo</h1></header>
+    <div id="map"></div>
+
+    <footer>
+      <a style="float:right" href="" id="permalink">Permalink</a>
+
+      <div>Position lat/lon (epsg:4326): <span id="mousePosLatLon"></span></div>
+      <div>Position Spherical Mercator (epsg:900913): <span id="mousePosSphericalMercator"></span></div>
+      <!--
+      <div>Position Swiss CH1913 (epsg:4149): <span id="mousePosCH1913"></span></div>
+       -->
+      <div>Zoom Level: <span id="zoomLevel"> </span></div>
+      <div id="buildInfo"></div>
+    </footer>
+
+    <script>
+      var map = new OpenLayers.Map("map");
+      var DEBUG = false;
+
+      document.getElementById("buildInfo").innerHTML = config.BUILD_INFO;
+
+      for (var i = 0; i < config.MAPNICK_INSTANCES.length; i++) {
+        var name = config.MAPNICK_INSTANCES[i];
+
+        if (config.USE_TILECACHE) {
+          var mapnikTC = new OpenLayers.Layer.OSM("Mapnik " + name + " TileCache",
+            "/tc/1.0.0/mapnik_" + name + "/${z}/${x}/${y}.png"
+          );
+          map.addLayer(mapnikTC);
+        }
+
+        if (DEBUG) {
+          var mapnikDirect = new OpenLayers.Layer.OSM("Mapnik " + name + " direct access",
+            "/t/mapnik_" + name + "/${z}/${x}/${y}.png"
+          );
+          map.addLayer(mapnikDirect);
+        }
+      }
+
+      if (config.USE_MAPSERVER) {
+
+        if (config.USE_TILECACHE) {
+          var mapserverTC = new OpenLayers.Layer.OSM("Mapserver TileCache",
+            "/tc/1.0.0/mapserver/${z}/${x}/${y}.png"
+          );
+          map.addLayer(mapserverTC);
+        }
+
+        if (DEBUG) {
+          var mapserverWMS = new OpenLayers.Layer.WMS(
+            "Mapserver WMS",
+            "/cgi-bin/mapserv?", {
+              layers: 'default',
+              format: 'agg'
+              //transparent: 'off'
+            }, {
+              singleTile: true,
+
+              // copied from OpenLayers/Layer/XYZ.js
+              maxExtent: new OpenLayers.Bounds(
+                -128 * 156543.0339,
+                -128 * 156543.0339,
+                128 * 156543.0339,
+                128 * 156543.0339
+              ),
+              maxResolution: 156543.0339,
+              numZoomLevels: 19,
+              units: "m",
+              projection: "EPSG:900913"
+            }
+          );
+          map.addLayer(mapserverWMS);
+        }
+      }
+
+
+      var e = config.EXTENT_LATLON;
+      var extent = new OpenLayers.Bounds(e[0], e[1], e[2], e[3]);
+      var proj = new OpenLayers.Projection("EPSG:4326");
+      extent.transform(proj, map.getProjectionObject());
+      // hack to prevent changing extent if there are permalink parameters.
+      if (location.search.indexOf("zoom=") == -1)
+        map.zoomToExtent(extent);
+
+      map.addControl(new OpenLayers.Control.MousePosition({
+        element: document.getElementById("mousePosLatLon"),
+        numDigits: 2,
+        displayProjection: new OpenLayers.Projection("EPSG:4326")
+      }));
+
+      var switcherControl = new OpenLayers.Control.LayerSwitcher();
+      map.addControl(switcherControl);
+      //switcherControl.maximizeControl();
+
+      map.addControl(new OpenLayers.Control.MousePosition({
+        element: document.getElementById("mousePosSphericalMercator"),
+        numDigits: 1,
+        displayProjection: new OpenLayers.Projection("EPSG:900913"),
+      }));
+
+      // XXX doesn't work.
+      /*
+      map.addControl(new OpenLayers.Control.MousePosition({
+        element: document.getElementById("mousePosCH1913"),
+        numDigits: 2,
+        displayProjection: new OpenLayers.Projection("EPSG:4149"),
+      }));
+      */
+
+      map.addControl(new OpenLayers.Control.Permalink("permalink"));
+      map.addControl(new OpenLayers.Control.Scale());
+      map.addControl(new OpenLayers.Control.ScaleLine({
+        bottomOutUnits: ""
+      }));
+
+      var control = new OpenLayers.Control();
+      OpenLayers.Util.extend(control, {
+        autoActivate: true,
+        activate: function() {
+          if (OpenLayers.Control.prototype.activate.apply(this, arguments)) {
+            this.map.events.register("zoomend", this, this.redraw);
+            this.redraw();
+            return true;
+          } else {
+            return false;
+          }
+        },
+        deactivate: function() {
+          if (OpenLayers.Control.prototype.deactivate.apply(this, arguments)) {
+            this.map.events.unregister("zoomend", this, this.redraw);
+            return true;
+          } else {
+            return false;
+          }
+        },
+        redraw: function() {
+          document.getElementById("zoomLevel").firstChild.data = map.zoom;
+        },
+      });
+      map.addControl(control);
+    </script>
+  </body>
+</html>

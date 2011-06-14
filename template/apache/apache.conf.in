@@ -1,0 +1,46 @@
+# @@GENERATED_WARNING@@
+<VirtualHost *:80>
+  ServerAdmin webmaster@localhost
+  ServerName @@APACHE_SERVER_NAME@@
+  ServerAlias @@APACHE_SERVER_ALIASES@@
+
+  DocumentRoot @@DOCUMENT_ROOT@@
+  <Directory />
+    Options FollowSymLinks
+    AllowOverride None
+  </Directory>
+  <Directory  @@DOCUMENT_ROOT@@>
+    Options Indexes FollowSymLinks MultiViews
+    AllowOverride None
+    Order allow,deny
+    allow from all
+  </Directory>
+
+  # Tiles direct access
+  Alias /t @@PROJECT_DIR@@/data/tiles
+
+  # Tilecache
+  @USE_TILECACHE_COMMENT@WSGIScriptAlias /tc @@PROJECT_DIR@@/apache/tilecache.wsgi
+
+  # cgi for mapserver
+  # TODO: deny from outside?
+  ScriptAlias /cgi-bin/ @@PROJECT_DIR@@/apache/cgi-bin/
+  <Directory "@@PROJECT_DIR@@/apache/cgi-bin">
+    AllowOverride None
+    Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+    Order allow,deny
+    Allow from all
+  </Directory>
+
+  SetEnvIf Request_URI "/cgi-bin/mapserv" MS_MAPFILE=@@PROJECT_DIR@@/mapserver-utils/osm-mapserver.map
+
+
+  ErrorLog ${APACHE_LOG_DIR}/error.log
+
+  # Possible values include: debug, info, notice, warn, error, crit,
+  # alert, emerg.
+  LogLevel warn
+
+  CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>

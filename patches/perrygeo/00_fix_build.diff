@@ -1,0 +1,25 @@
+diff -ru perrygeo.orig//demtools/Makefile perrygeo/demtools/Makefile
+--- perrygeo.orig//demtools/Makefile	2011-06-08 17:01:25.000000000 +0200
++++ perrygeo/demtools/Makefile	2011-06-08 16:21:17.000000000 +0200
+@@ -6,7 +6,7 @@
+ ######
+ 
+ CPP=g++
+-GDAL_LIB=-lgdal
++GDAL_LIB=$(shell gdal-config --libs) $(shell gdal-config --cflags) -O3
+ 
+ default: compile
+ 
+Only in perrygeo.orig//demtools: Makefile.orig
+diff -ru perrygeo.orig//demtools/stringtok.h perrygeo/demtools/stringtok.h
+--- perrygeo.orig//demtools/stringtok.h	2011-06-08 17:01:25.000000000 +0200
++++ perrygeo/demtools/stringtok.h	2011-06-08 16:01:20.000000000 +0200
+@@ -5,6 +5,8 @@
+ // The std:: prefix is not used here, for readability, and a line like
+ // "using namespace std;" is dangerous to have in a header file.
+ 
++using std::string;
++
+ template <typename Container>
+ void
+ stringtok (Container &container, string const &in,

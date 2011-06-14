@@ -1,0 +1,6 @@
+# This file overrides the settings in osm-server-setup/default_config.py
+# Have a look inside that file for stuff that can be customized.
+
+DB_PASSWORD = "override-me"
+
+MAPNIK_INSTANCES = ["upstream", "custom"]

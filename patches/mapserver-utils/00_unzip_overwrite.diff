@@ -1,0 +1,23 @@
+diff -p1 -udr mapserver-utils.orig/data/Makefile mapserver-utils/data/Makefile
+--- mapserver-utils.orig/data/Makefile	2011-05-30 12:20:08.000000000 +0200
++++ mapserver-utils/data/Makefile	2011-05-30 12:20:28.000000000 +0200
+@@ -12,3 +12,3 @@ world_bnd_m.shp: world_boundaries-spheri
+ 10m_populated_places.shp: 10m-populated-places.zip
+-	unzip 10m-populated-places.zip
++	unzip -o 10m-populated-places.zip
+ 	touch 10m_populated_places.shp
+@@ -16,3 +16,3 @@ world_bnd_m.shp: world_boundaries-spheri
+ 110m_admin_0_boundary_lines.shp: 110m-admin-0-boundary-lines.zip
+-	unzip 110m-admin-0-boundary-lines.zip
++	unzip -o 110m-admin-0-boundary-lines.zip
+ 	touch 110m_admin_0_boundary_lines.shp
+@@ -20,3 +20,3 @@ world_bnd_m.shp: world_boundaries-spheri
+ TM_WORLD_BORDERS-0.3.shp: TM_WORLD_BORDERS-0.3.zip
+-	unzip TM_WORLD_BORDERS-0.3.zip
++	unzip -o -o TM_WORLD_BORDERS-0.3.zip
+ 	touch TM_WORLD_BORDERS-0.3.shp
+@@ -24,3 +24,3 @@ TM_WORLD_BORDERS-0.3.shp: TM_WORLD_BORDE
+ 10m_admin_0_boundary_lines_land.shp: 10m-admin-0-boundary-lines-land.zip
+-	unzip 10m-admin-0-boundary-lines-land.zip
++	unzip -o 10m-admin-0-boundary-lines-land.zip
+ 	touch 10m_admin_0_boundary_lines_land.shp
