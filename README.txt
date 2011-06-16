@@ -31,6 +31,16 @@ can be adjusted in the configuration):
   configured layers (http://openlayers.org/).
 * Configure Apache.
 
+
+Limitations
+-----------
+
+The script assumes it is running on a Debian 6 system.
+It might work on Debian derivatives (e.g. Ubuntu) though.
+
+There are a few hardcoded stuff that should rather be configurable.
+
+
 Creating your project
 ---------------------
 
