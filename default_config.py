@@ -22,6 +22,11 @@ USE_SRTM = True
 SRTM_HGT_URLS = [
     #("http://example.com/myfile.zip", "N46E006.hgt.zip"),
 ]
+# Set this to a value greater than 0 to resize the .hgt file to the given
+# dimension (same for height and width). NASA .hgt tiles have a dimension
+# of 1201 x 1201. This parameter can be useful if you are using tiles that
+# have a higher resolution and should be simplified.
+SRTM_RESIZE_DIMENSION = -1
 # Whether to generate a hill shading .tif image from the elevation files.
 # (See http://wiki.openstreetmap.org/wiki/Hillshading_with_Mapnik)
 # This requires USE_SRTM to be True

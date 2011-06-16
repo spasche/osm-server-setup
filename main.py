@@ -660,6 +660,8 @@ class SRTMData(Bundle):
 
         # Clean previously generated files.
         for p in glob.glob(join(self.srtm_dir, "contours*")):
+            if "contours_hillshading.tif" in p:
+                continue
             os.unlink(p)
 
         log.info("Uncompressing .hgt files")
@@ -670,14 +672,14 @@ class SRTMData(Bundle):
             call(["unzip", "-qo", filename], cwd=self.srtm_dir)
             to_merge.append(filename.replace(".zip", ""))
 
-        OUTPUT_SIZE = 1201
-        if OUTPUT_SIZE > 0:
+        if self.config.SRTM_RESIZE_DIMENSION > 0:
             # Reduce size of .hgt files.
             log.info("Warping .hgt files")
             for f in to_merge:
                 maybe_unlink(join(self.srtm_dir, f + "_tmp"))
-                call("gdalwarp -ts {width} {height} {input} {output}".format(
-                    width=OUTPUT_SIZE, height=OUTPUT_SIZE,
+                call("gdalwarp -rcs -order 3 -ts {width} {height} {input} {output}".format(
+                    width=self.config.SRTM_RESIZE_DIMENSION,
+                    height=self.config.SRTM_RESIZE_DIMENSION,
                     input=f, output=f + "_tmp"),
                     shell=True, cwd=self.srtm_dir)
                 maybe_unlink(join(self.srtm_dir, f))
@@ -736,7 +738,7 @@ class SRTMData(Bundle):
         # TODO: create options for some of the parameters
 
         maybe_unlink(join(self.srtm_dir, "contours.tif"))
-        call('gdal_translate  -co "TILED=YES" contours.hgt contours.tif',
+        call('gdal_translate -co "TILED=YES" contours.hgt contours.tif',
             shell=True, cwd=self.srtm_dir)
 
         maybe_unlink(join(self.srtm_dir, "contours_warped.tif"))
@@ -759,7 +761,7 @@ class SRTMData(Bundle):
 
     def load_data_clean(self):
         maybe_unlink(join(self.srtm_dir, "contours.hgt"))
-        maybe_unlink(join(self.srtm_dir, "contours_hillshading.hgt"))
+        maybe_unlink(join(self.srtm_dir, "contours_hillshading.tif"))
 
         db_bundle = self.executor.get_bundle("setupdatabase")
         db_bundle.execute_sql(
