@@ -9,9 +9,12 @@ EXTENT = (5.94, 45.70, 10.54, 47.90)
 # Note: might not work if changed to something other than spherical mercator
 SRID_OSM = 900913
 
+USE_OSMOSIS = False
+
 OSM2PGSQL_SVN_URL = "http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/"
 OSM2PGSQL_SVN_REVISION = "26061" # 2011-05-04 21:51:45 +0200 (Wed, 04 May 2011)
-
+# Set this to True if you are loading large data, or if you plan to load diffs.
+OSM2PGSQL_SLIM_MODE = False
 OSM_DATA_URLS = ["http://download.geofabrik.de/osm/europe/switzerland.osm.bz2"]
 
 USE_SRTM = True

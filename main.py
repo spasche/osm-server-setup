@@ -500,6 +500,44 @@ class Osm2pgsqlBuild(Bundle, SVNCheckoutMixin):
             cwd=self.svn_checkout_dir)
 
 
+class Osmosis(Bundle):
+    """
+    See
+    http://wiki.openstreetmap.org/wiki/Minutely_Mapnik
+    http://wiki.openstreetmap.org/wiki/Osmosis
+    http://wiki.openstreetmap.org/wiki/Osmosis/Detailed_Usage
+    """
+    OSMOSIS_VER = "0.39"
+
+    def __init__(self, *args, **kwargs):
+        super(Osmosis, self).__init__(*args, **kwargs)
+        self.work_dir = join(self.project_dir, "data", "osmosis")
+        self.changes_file = join(self.work_dir, "changes.osm.gz")
+        self.osmosis = join(
+            self.project_dir, "build", "osmosis-{0}".format(self.OSMOSIS_VER),
+            "bin", "osmosis")
+
+    def system_setup(self):
+        self.install_packages("openjdk-6-jre")
+
+    def download(self):
+        self.fetch_resources([
+            ("http://dev.openstreetmap.org/~bretth/osmosis-build/osmosis-latest.tgz",
+                "build", "793a1cff312ed003e90ee090d77c33db"),
+        ])
+
+    def build(self):
+        if not os.path.isdir(self.work_dir):
+            os.makedirs(self.work_dir)
+        call([self.osmosis, "--read-replication-interval-init",
+            "workingDirectory=" + self.work_dir])
+
+    def read_replication(self):
+        call([self.osmosis, "--read-replication-interval",
+            "workingDirectory=" + self.work_dir, "--simplify-change",
+            "--write-xml-change", self.changes_file])
+
+
 class OsmData(Bundle):
     """
     See
@@ -516,8 +554,11 @@ class OsmData(Bundle):
         self.did_load_data = False
 
     @property
-    def dependencies(self):
-        return [SetupDatabase, Osm2pgsqlBuild]
+    def dependencies(self): 
+        deps = [SetupDatabase, Osm2pgsqlBuild]
+        if self.config.USE_OSMOSIS:
+            deps.append(Osmosis)
+        return deps
 
     def download(self):
         self.fetch_resources(self.osm_resources)
@@ -525,15 +566,7 @@ class OsmData(Bundle):
     def download_clean(self):
         self.clean_resources(self.osm_resources)
 
-    def load_data(self):
-        db_bundle = self.executor.get_bundle("setupdatabase")
-        # Assumes that if all the osm tables are present, the import doesn't
-        # need to run.
-        if all([db_bundle.query_succeeds(
-            'select * from "{0}_{1}" limit 1'.format(self.tables_prefix, t)) for
-            t in ["point", "line", "polygon", "roads"]]):
-            return
-
+    def _call_osm2pgsql(self, args):
         osm2pgsql_bundle = self.executor.get_bundle("osm2pgsqlbuild")
         cmd = [
             join(osm2pgsql_bundle.svn_checkout_dir, "osm2pgsql"),
@@ -545,12 +578,29 @@ class OsmData(Bundle):
             "--bbox", ",".join(str(c) for c in self.config.EXTENT),
             "-S", join(osm2pgsql_bundle.svn_checkout_dir, "default.style"),
         ]
-        for r in self.osm_resources:
-            cmd.append(self.executor.fetcher.get_downloaded_path(r))
+        if self.config.OSM2PGSQL_SLIM_MODE:
+            cmd.append("--slim")
+        cmd.extend(args)
+
         env = os.environ.copy()
         env["PGPASS"] = self.config.DB_PASSWORD
+
         log.info("osm2pgsql command: %s", cmd)
         call(cmd, env=env)
+
+    def load_data(self):
+        db_bundle = self.executor.get_bundle("setupdatabase")
+        # Assumes that if all the osm tables are present, the import doesn't
+        # need to run.
+        if all([db_bundle.query_succeeds(
+            'select * from "{0}_{1}" limit 1'.format(self.tables_prefix, t)) for
+            t in ["point", "line", "polygon", "roads"]]):
+            return
+
+        args = []
+        for r in self.osm_resources:
+            args.append(self.executor.fetcher.get_downloaded_path(r))
+        self._call_osm2pgsql(args)
 
         self.did_load_data = True
 
@@ -562,6 +612,10 @@ class OsmData(Bundle):
                 "select DropGeometryTable('{prefix}_{table}')".format(
                     prefix=self.tables_prefix,
                     table=table))
+
+    def load_replication(self):
+        osmosis_bundle = self.executor.get_bundle("osmosis")
+        self._call_osm2pgsql(["--append", osmosis_bundle.changes_file])
 
 
 class SRTMData(Bundle):
@@ -677,7 +731,8 @@ class SRTMData(Bundle):
             log.info("Warping .hgt files")
             for f in to_merge:
                 maybe_unlink(join(self.srtm_dir, f + "_tmp"))
-                call("gdalwarp -rcs -order 3 -ts {width} {height} {input} {output}".format(
+                call("gdalwarp -rcs -order 3 -ts {width} {height} -multi "
+                    "{input} {output}".format(
                     width=self.config.SRTM_RESIZE_DIMENSION,
                     height=self.config.SRTM_RESIZE_DIMENSION,
                     input=f, output=f + "_tmp"),
@@ -995,7 +1050,8 @@ class MapserverConfig(Bundle, SVNCheckoutMixin):
 
         try:
             call("cp -rl data/world_boundaries/* mapserver-utils/data/",
-                shell=True, cwd=self.project_dir)
+                shell=True, cwd=self.project_dir,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
             pass
 
