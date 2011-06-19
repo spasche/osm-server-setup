@@ -13,11 +13,18 @@ import optparse
 import os
 from os.path import join
 import pwd
+import re
 import shelve
 import shutil
 import stat
 import subprocess
 import sys
+
+thisdir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(join(thisdir, "third_party"))
+
+import srtm
+import tempita
 
 log = logging.getLogger(__name__)
 
@@ -315,6 +322,22 @@ class CoreBundle(Bundle):
     def system_setup(self):
         self.install_packages("unzip")
 
+    def _process_dot_in_file(self, content, vars, template_dir):
+        if content.startswith("# Tempita"):
+            content = content[content.index("\n") + 1:]
+            def get_template(name, from_template):
+                path = join(template_dir, name)
+                return from_template.__class__.from_filename(
+                    path, namespace=from_template.namespace,
+                    get_template=from_template.get_template)
+
+            tmpl = tempita.Template(content, get_template=get_template)
+            return tmpl.substitute(vars)
+
+        for (key, value) in vars.iteritems():
+            content = content.replace("@@" + key + "@@", str(value))
+        return content
+
     def _copy_dot_in_files(self):
 
         c = self.config
@@ -352,8 +375,8 @@ class CoreBundle(Bundle):
                     vars["GENERATED_WARNING"] = ("Warning, this file is generated"
                         " from %s. Edit that file instead and run the update "
                         "script." % source)
-                    for (key, value) in vars.iteritems():
-                        content = content.replace("@@" + key + "@@", str(value))
+
+                    content = self._process_dot_in_file(content, vars, path)
                     f.write(content)
                 try:
                     shutil.copymode(source, target)
@@ -529,6 +552,8 @@ class Osmosis(Bundle):
     def build(self):
         if not os.path.isdir(self.work_dir):
             os.makedirs(self.work_dir)
+        if os.path.isfile(join(self.work_dir, "configuration.txt")):
+            return
         call([self.osmosis, "--read-replication-interval-init",
             "workingDirectory=" + self.work_dir])
 
@@ -644,11 +669,6 @@ class SRTMData(Bundle):
         super(SRTMData, self).__init__(executor)
         self.srtm_dir = join(self.project_dir, "data", "srtm")
         make_dirs_as_project_owner(self.project_dir, self.srtm_dir)
-        try:
-            import srtm
-        except ImportError:
-            sys.path.append(join(self.executor.oss_dir, "third_party"))
-            import srtm
 
         self.downloader = srtm.SRTMDownloader(cachedir=self.srtm_dir)
 
@@ -1129,9 +1149,9 @@ class TileCache(Bundle):
     def build(self):
         tc_config = join(self.project_dir, "tilecache", "tilecache.cfg")
         content = open(tc_config).read()
+        # TODO: use tempita for instead
         if "@@MAPNIK_START@@" not in content:
             return
-        import re
         before, template, after = re.search(
             "(.*)@@MAPNIK_START@@\n(.*)@@MAPNIK_END@@\n(.*)", content, re.DOTALL).groups()
         result = before
