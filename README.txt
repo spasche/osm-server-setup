@@ -99,6 +99,36 @@ python osm-server-setup/main.py -v tilecache:generate
 http://APACHE_SERVER_NAME/demo.html
 
 
+Updating the OSM data with replication files
+--------------------------------------------
+
+This is based on the documentation from (see there for more details):
+http://wiki.openstreetmap.org/wiki/Minutely_Mapnik
+http://wiki.openstreetmap.org/wiki/Osmosis
+http://wiki.openstreetmap.org/wiki/Osmosis/Detailed_Usage
+
+First, you need to to have 'USE_OSMOSIS = True' in your config.py.
+Run main.py with download and build commands to fetch all the requirements.
+
+Edit data/osmosis/configuration.txt to select change interval and other settings.
+{{{
+# The URL of the directory containing change files.
+baseUrl=http://planet.openstreetmap.org/hour-replicate
+
+# Defines the maximum time interval in seconds to download in a single invocation.
+# Setting to 0 disables this feature.
+maxInterval = 0
+}}}
+
+Update the state file. You need to choose the right state URL:
+wget -O http://planet.openstreetmap.org/hour-replicate/000/014/017.state.txt
+
+# This reads the replication interval files, and puts them into data/osmosis/changes.osm.gz
+python osm-server-setup/main.py -v osmosis:read_replication
+
+# Loads the changes in the database.
+python osm-server-setup/main.py -v osmdata_osm_mapnik:load_replication
+
 
 Contact
 -------
