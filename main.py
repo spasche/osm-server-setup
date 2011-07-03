@@ -302,9 +302,9 @@ class Bundle(object):
 class CoreBundle(Bundle):
     def _copy_template_directory(self):
         target_path = self.project_dir
+        base_parts_count = len(self.executor.oss_dir.split(os.path.sep))
         for path, dirlist, filelist in os.walk(join(self.executor.oss_dir, "template")):
             for name in filelist:
-                base_parts_count = len(self.executor.oss_dir.split(os.path.sep))
                 relative_path = os.sep.join(path.split(os.sep)[base_parts_count + 1:])
 
                 source = join(path, name)
