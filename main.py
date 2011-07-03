@@ -593,6 +593,9 @@ class OsmData(Bundle):
 
     def _call_osm2pgsql(self, args):
         osm2pgsql_bundle = self.executor.get_bundle("osm2pgsqlbuild")
+        style_path = self.config.OSM_DATA_STYLE_PATH.get(
+            self.tables_prefix,
+            join(osm2pgsql_bundle.svn_checkout_dir, "default.style"))
         cmd = [
             join(osm2pgsql_bundle.svn_checkout_dir, "osm2pgsql"),
             "-H", self.config.DB_HOST,
@@ -601,7 +604,7 @@ class OsmData(Bundle):
             "-d", self.config.DB_NAME,
             "-p", self.tables_prefix,
             "--bbox", ",".join(str(c) for c in self.config.EXTENT),
-            "-S", join(osm2pgsql_bundle.svn_checkout_dir, "default.style"),
+            "-S", style_path,
         ]
         if self.config.OSM2PGSQL_SLIM_MODE:
             cmd.append("--slim")
@@ -1228,7 +1231,9 @@ class BundleExecutor(object):
         self.fetcher = Fetcher(self)
 
     def _parse_config(self):
-        config = {}
+        config = {
+            'executor': self,
+        }
         execfile(join(self.oss_dir, "default_config.py"), {}, config)
 
         config_path = join(self.project_dir, "config.py")

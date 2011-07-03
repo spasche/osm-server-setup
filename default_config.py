@@ -16,6 +16,9 @@ OSM2PGSQL_SVN_REVISION = "26061" # 2011-05-04 21:51:45 +0200 (Wed, 04 May 2011)
 # Set this to True if you are loading large data, or if you plan to load diffs.
 OSM2PGSQL_SLIM_MODE = False
 OSM_DATA_URLS = ["http://download.geofabrik.de/osm/europe/switzerland.osm.bz2"]
+# This can be used to use another style file than the upstream default.style.
+# Key should be osm_mapserver or osm_mapnik, value is the path to the style file.
+OSM_DATA_STYLE_PATH = {}
 
 USE_SRTM = True
 # List of hgt.zip URLs that should be downloaded instead of the NASA ones.
