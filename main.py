@@ -1179,7 +1179,7 @@ class TileCache(Bundle):
             if layer in self.config.TILECACHE_NOSEED_LAYERS:
                 continue
             log.info("Seeding layer: %s", layer)
-            zooms = ((self.config.SEED_ZOOM_FROM, self.config.SEED_ZOOM_TO))
+            zooms = ((self.config.SEED_ZOOM_FROM, self.config.SEED_ZOOM_TO),)
             if layer in self.config.SEED_ZOOMS:
                 zooms = self.config.SEED_ZOOMS[layer]
             
