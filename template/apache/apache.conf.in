@@ -17,10 +17,14 @@
   </Directory>
 
   # Tiles direct access
-  Alias /t @@PROJECT_DIR@@/data/tiles
+  Alias /t @@PROJECT_DIR@@/data/tiles/tc_cache
+  <Directory "@@PROJECT_DIR@@/data/tiles/tc_cache">
+    @@USE_TILECACHE_COMMENT@@ExpiresActive on
+    @@USE_TILECACHE_COMMENT@@ExpiresDefault "access plus 1 year"
+  </Directory>
 
   # Tilecache
-  @USE_TILECACHE_COMMENT@WSGIScriptAlias /tc @@PROJECT_DIR@@/apache/tilecache.wsgi
+  @@USE_TILECACHE_COMMENT@@WSGIScriptAlias /tc @@PROJECT_DIR@@/apache/tilecache.wsgi
 
   # cgi for mapserver
   # TODO: deny from outside?

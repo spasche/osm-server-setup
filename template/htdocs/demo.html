@@ -66,14 +66,48 @@
       <div>Position Spherical Mercator (epsg:900913): <span id="mousePosSphericalMercator"></span></div>
       <!--
       <div>Position Swiss CH1913 (epsg:4149): <span id="mousePosCH1913"></span></div>
-       -->
+      -->
       <div>Zoom Level: <span id="zoomLevel"> </span></div>
       <div id="buildInfo"></div>
     </footer>
 
     <script>
+      function parseQueryString(str) {
+        var paramArray = str.split("&");
+        var regex = /^([^=]+)=(.*)$/;
+        var params = {};
+        for (var i = 0, sz = paramArray.length; i < sz; i++) {
+          var match = regex.exec(paramArray[i]);
+          if (!match)
+            continue;
+          params[decodeURIComponent(match[1])] = decodeURIComponent(match[2]);
+        }
+        return params;
+      }
+
+      var params = parseQueryString(location.search.substring(1));
+      var DEBUG = params.debug == "1";
+
+      var MERCATOR_LAYER_CONFIG = {
+        // copied from OpenLayers/Layer/XYZ.js
+        maxExtent: new OpenLayers.Bounds(
+          -128 * 156543.0339,
+          -128 * 156543.0339,
+          128 * 156543.0339,
+          128 * 156543.0339
+        ),
+        maxResolution: 156543.0339,
+        numZoomLevels: 19,
+        units: "m",
+        projection: "EPSG:900913"
+      };
+      // Shared WMS layer configuration
+      var MERCATOR_WMS_LAYER_CONFIG = {
+        singleTile: true
+      };
+      OpenLayers.Util.extend(MERCATOR_WMS_LAYER_CONFIG, MERCATOR_LAYER_CONFIG);
+
       var map = new OpenLayers.Map("map");
-      var DEBUG = false;
 
       document.getElementById("buildInfo").innerHTML = config.BUILD_INFO;
 
@@ -88,10 +122,24 @@
         }
 
         if (DEBUG) {
-          var mapnikDirect = new OpenLayers.Layer.OSM("Mapnik " + name + " direct access",
-            "/t/mapnik_" + name + "/${z}/${x}/${y}.png"
+          var mapnikDirect = new OpenLayers.Layer.TileCache("Mapnik " + name + " direct access",
+            "/t/",
+            "mapnik_" + name,
+            MERCATOR_LAYER_CONFIG
           );
+          // Add a version to the urls for cache busting (hacking the extension instance variable).
+          var VERSION = 0;
+          mapnikDirect.extension += "?" + VERSION;
           map.addLayer(mapnikDirect);
+
+          var mapnikWMS = new OpenLayers.Layer.WMS(
+            "Mapnik " + name + " WMS",
+            "/cgi-bin/wms_mapnik.py?instance=" + name + "&", {
+              layers: '__all__',
+              format: 'image/png'
+            }, MERCATOR_WMS_LAYER_CONFIG
+          );
+          map.addLayer(mapnikWMS);
         }
       }
 
@@ -110,27 +158,11 @@
             "/cgi-bin/mapserv?", {
               layers: 'default',
               format: 'agg'
-              //transparent: 'off'
-            }, {
-              singleTile: true,
-
-              // copied from OpenLayers/Layer/XYZ.js
-              maxExtent: new OpenLayers.Bounds(
-                -128 * 156543.0339,
-                -128 * 156543.0339,
-                128 * 156543.0339,
-                128 * 156543.0339
-              ),
-              maxResolution: 156543.0339,
-              numZoomLevels: 19,
-              units: "m",
-              projection: "EPSG:900913"
-            }
+            }, MERCATOR_WMS_LAYER_CONFIG
           );
           map.addLayer(mapserverWMS);
         }
       }
-
 
       var e = config.EXTENT_LATLON;
       var extent = new OpenLayers.Bounds(e[0], e[1], e[2], e[3]);
