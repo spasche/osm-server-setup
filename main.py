@@ -1121,6 +1121,7 @@ class TileCache(Bundle):
         self.install_packages("python-imaging")
         if self.config.USE_APACHE:
             self.install_packages("libapache2-mod-wsgi python-paste")
+            call("a2enmod expires", shell=True)
 
         make_dirs_as_project_owner(self.project_dir, self.cache_dir)
 
@@ -1178,10 +1179,15 @@ class TileCache(Bundle):
             if layer in self.config.TILECACHE_NOSEED_LAYERS:
                 continue
             log.info("Seeding layer: %s", layer)
-            # XXX add padding too? (-p option).
-            call([seed_script, "-c", tc_config, "-b", bbox, layer,
-                str(self.config.SEED_ZOOM_FROM),
-                str(self.config.SEED_ZOOM_TO + 1)])
+            zooms = ((self.config.SEED_ZOOM_FROM, self.config.SEED_ZOOM_TO))
+            if layer in self.config.SEED_ZOOMS:
+                zooms = self.config.SEED_ZOOMS[layer]
+            
+            for start_zoom, end_zoom in zooms:
+                # XXX add padding too? (-p option).
+                call([seed_script, "-c", tc_config, "-b", bbox, layer,
+                    str(start_zoom),
+                    str(end_zoom + 1)])
 
     def generate_clean(self):
         for d in os.listdir(self.cache_dir):

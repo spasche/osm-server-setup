@@ -54,6 +54,11 @@ TILECACHE_NOSEED_LAYERS = set()
 # Zoom levels to generate (inclusive).
 SEED_ZOOM_FROM = 1
 SEED_ZOOM_TO = 10
+# Per layer zoom levels to generated. Can include several ranges, for instance.
+# SEED_ZOOMS = {
+#   "mapnik_mylayer" : ((11, 12), (13, 13), (15, 16)),
+# }
+SEED_ZOOMS = {}
 
 USE_APACHE = True
 APACHE_SERVER_NAME = "carto"
