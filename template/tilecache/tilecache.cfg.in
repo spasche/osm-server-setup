@@ -10,6 +10,9 @@ spherical_mercator=true
 tms_type=google
 metaTile=yes
 debug=off
+@@PARAM_0@@
+@@PARAM_1@@
+@@PARAM_2@@
 @@MAPNIK_END@@
 
 # OpenStreetMap data with Mapnik with Mapserver

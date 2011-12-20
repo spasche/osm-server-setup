@@ -40,6 +40,12 @@ USE_HILLSHADING = True
 
 # Set this to an empty list to disable Mapnik
 MAPNIK_INSTANCES = ["upstream", "custom"]
+MAPNIK_DEFAULT_PARAMS = {
+    "param_0": "",
+    "param_1": "",
+    "param_2": "",
+}
+MAPNIK_INSTANCES_PARAMS = {}
 MAPNIK_SVN_URL = "http://svn.openstreetmap.org/applications/rendering/mapnik"
 MAPNIK_SVN_REVISION = "26022" # 2011-05-21 00:46:09 +0200 (Sat, 21 May 2011)
 

@@ -1160,7 +1160,13 @@ class TileCache(Bundle):
             "(.*)@@MAPNIK_START@@\n(.*)@@MAPNIK_END@@\n(.*)", content, re.DOTALL).groups()
         result = before
         for name in self.config.MAPNIK_INSTANCES:
-            result += template.replace("@@MAPNIK_NAME@@", name) + "\n"
+            layer_config = template.replace("@@MAPNIK_NAME@@", name) + "\n"
+
+            params = self.config.MAPNIK_DEFAULT_PARAMS.copy()
+            params.update(self.config.MAPNIK_INSTANCES_PARAMS.get(name, {}))
+            for key, value in params.iteritems():
+                layer_config = layer_config.replace("@@%s@@" % key.upper(), value)
+            result += layer_config + "\n"
         result += after
         open(tc_config, "wb").write(result)
 

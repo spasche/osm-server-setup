@@ -4,3 +4,8 @@
 DB_PASSWORD = "override-me"
 
 MAPNIK_INSTANCES = ["upstream", "custom"]
+MAPNIK_INSTANCES_PARAMS = {
+  "custom": {
+    "param_0": "extension=jpg",
+  }
+}
