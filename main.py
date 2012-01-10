@@ -458,7 +458,6 @@ class SetupDatabase(Bundle):
         self._call("createdb -E UTF8 -O {DB_USER} {DB_NAME}")
         self._call("createlang plpgsql {DB_NAME}")
         # TODO: config for .sql paths
-        self._call("psql -d {DB_NAME} -f /usr/share/postgresql/8.4/contrib/_int.sql")
         self._call("psql -d {DB_NAME} -f /usr/share/postgresql/8.4/contrib/postgis-1.5/postgis.sql")
         self._call("psql -d {DB_NAME} -f /usr/share/postgresql/8.4/contrib/postgis-1.5/spatial_ref_sys.sql")
         self._call("psql {DB_NAME} -c 'ALTER TABLE geometry_columns OWNER TO {DB_USER}'")
@@ -883,7 +882,7 @@ class MapnikConfig(Bundle, SVNCheckoutMixin):
             ("http://tile.openstreetmap.org/shoreline_300.tar.bz2",
                 "data/world_boundaries"),
             ("http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/10m/cultural/10m-populated-places.zip",
-                "data/world_boundaries", "c7dc8df2ab4a325f5c4fde3e1727655e"),
+                "data/world_boundaries", "ba61ef461732bbd85fea18deafb6db8c"),
             ("http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/110m-admin-0-boundary-lines.zip",
                 "data/world_boundaries", "1d116cde1491e514f3f49224682f82b5"),
         ])
@@ -1225,8 +1224,8 @@ class ApacheConfig(Bundle):
 class OpenLayers(Bundle):
     def download(self):
         self.fetch_resources([
-            ("http://openlayers.org/download/OpenLayers-2.10.tar.gz",
-                "htdocs", "4fdb8d5bf731168a65add0fabe9234dd"),
+            ("http://openlayers.org/download/OpenLayers-2.11.tar.gz",
+                "htdocs", "286dfde1db8c4c654df28c5e5664415e"),
         ])
 
 

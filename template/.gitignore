@@ -5,7 +5,7 @@
 /.pydevproject
 /apache/apache.conf
 /apache/tilecache.wsgi
-/htdocs/OpenLayers-2.10
+/htdocs/OpenLayers-2.11
 /htdocs/config.js
 /tilecache/tilecache.cfg
 

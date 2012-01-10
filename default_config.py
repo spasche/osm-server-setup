@@ -12,7 +12,7 @@ SRID_OSM = 900913
 USE_OSMOSIS = False
 
 OSM2PGSQL_SVN_URL = "http://svn.openstreetmap.org/applications/utils/export/osm2pgsql/"
-OSM2PGSQL_SVN_REVISION = "26061" # 2011-05-04 21:51:45 +0200 (Wed, 04 May 2011)
+OSM2PGSQL_SVN_REVISION = "27425" # 2012-01-06 13:18:04 +0100 (Fri, 06 Jan 2012)
 # Set this to True if you are loading large data, or if you plan to load diffs.
 OSM2PGSQL_SLIM_MODE = False
 OSM_DATA_URLS = ["http://download.geofabrik.de/osm/europe/switzerland.osm.bz2"]
@@ -47,7 +47,7 @@ MAPNIK_DEFAULT_PARAMS = {
 }
 MAPNIK_INSTANCES_PARAMS = {}
 MAPNIK_SVN_URL = "http://svn.openstreetmap.org/applications/rendering/mapnik"
-MAPNIK_SVN_REVISION = "26022" # 2011-05-21 00:46:09 +0200 (Sat, 21 May 2011)
+MAPNIK_SVN_REVISION = "27425" # 2011-12-18 21:02:14 +0100 (Sun, 18 Dec 2011)
 
 USE_MAPNIK_OGCSERVER = True
 
