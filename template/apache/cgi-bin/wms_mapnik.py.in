@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# @@GENERATED_WARNING@@
+
+import cgi
+import os
+import re
+import sys
+import wsgiref.handlers
+
+sys.path.insert(0, "@@PROJECT_DIR@@/build/OGCServer")
+
+from ogcserver.wsgi import WSGIApp
+
+form = cgi.FieldStorage()
+try:
+    instance = form["instance"].value
+except KeyError:
+    instance = os.environ["INSTANCE"]
+instance, suffix = (instance + ":").split(":")[:2]
+
+if not re.match("^[a-zA-Z]+$", instance):
+    raise Exception("Bad instance parameter")
+if suffix and not re.match("^[a-zA-Z]+$", suffix):
+    raise Exception("Bad instance suffix parameter")
+
+suffix = ("_" + suffix) if suffix else ""
+
+CONFIG_PATH = '@@PROJECT_DIR@@/apache/ogcserver.conf'
+MAPFILE = '@@PROJECT_DIR@@/mapnik_%s/osm%s.xml' % (instance, suffix)
+
+application = WSGIApp(CONFIG_PATH, MAPFILE)
+
+if 0:
+    def application(environ, start_response):
+        start_response('200 OK', [('Content-Type', 'text/plain')])
+        return ['Hello World! %r %s \n' % (os.environ,)]
+
+if __name__ == '__main__':
+    if "run" in sys.argv:
+        from wsgiref.simple_server import make_server
+        host = '0.0.0.0'
+        port = 8000
+        httpd = make_server(host, port, application)
+        print "Listening at %s:%s...." % (host, port)
+        httpd.serve_forever()
+        sys.exit(0)
+
+    # hack
+    os.environ["PATH_INFO"] = "/"
+    wsgiref.handlers.CGIHandler().run(application)
