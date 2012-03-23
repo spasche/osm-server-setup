@@ -918,6 +918,9 @@ class MapnikConfig(Bundle, SVNCheckoutMixin):
 
 
 class MapnikOGCServer(Bundle):
+    def system_setup(self):
+        self.install_packages("python-lxml")
+
     def download(self):
         ogcserver_dir = join(self.project_dir, "build", "OGCServer")
         if os.path.isdir(ogcserver_dir):
